@@ -30,7 +30,6 @@ const client = new MongoClient(uri, {
 //custom middleware
 const verifyToken = async (req, res, next) => {
   const token = req.cookies?.token;
-  console.log("value of token", token);
 
   if (!token) {
     return res.status(401).send({ message: "Unauthorized" });
@@ -41,7 +40,7 @@ const verifyToken = async (req, res, next) => {
       console.log(err);
       return res.status(401).send({ message: "Unauthorized" });
     }
-    // console.log("decoded data from custom middleware3",decoded);
+    // console.log("decoded data from custom middleware",decoded);
     req.decoded = decoded;
     next();
   });
@@ -52,7 +51,6 @@ async function run() {
     //  jwt token
     app.post("/jwt", async (req, res) => {
       const user = req.body;
-      console.log(user);
 
       const token = jwt.sign(user, process.env.SECRET_KEY_TOKEN, {
         expiresIn: "1d",
@@ -65,9 +63,6 @@ async function run() {
         })
         .send({ success: true });
     });
-
-
-
 
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
@@ -104,8 +99,13 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/myRooms/:email", async (req, res) => {
+    app.get("/myRooms/:email", verifyToken, async (req, res) => {
+      const { email } = req.decoded;
       const myEmail = req.params.email;
+
+      if (email !== myEmail) {
+        return res.status(403).send({ message: "Forbidden request" });
+      }
 
       const query = { email: myEmail };
       const result = await bookings.find(query).toArray();
