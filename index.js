@@ -33,8 +33,9 @@ async function run() {
     const reviews = database.collection("reviews")
 
     app.get("/rooms", async (req, res) => {
-      const cursor = rooms.find();
-      const result = await cursor.toArray();
+      // const cursor = rooms.find();
+      // const result = await cursor.toArray();
+      const result = await rooms.find().toArray();
       res.send(result);
     });
 
