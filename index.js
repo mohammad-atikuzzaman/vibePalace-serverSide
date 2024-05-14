@@ -3,14 +3,20 @@ const cors = require("cors");
 require("dotenv").config();
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const app = express();
-var jwt = require("jsonwebtoken");
+const jwt = require("jsonwebtoken");
+const cookieParser = require("cookie-parser");
 const port = process.env.PORT || 4000;
 
+app.use(cookieParser());
 app.use(express.json());
-app.use(cors());
+app.use(
+  cors({
+    origin: ["http://localhost:5173"],
+    credentials: true,
+  })
+);
 
-const uri =
-  `mongodb+srv://${process.env.DB_User}:${process.env.DB_Pass}@cluster0.tyigyp7.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+const uri = `mongodb+srv://${process.env.DB_User}:${process.env.DB_Pass}@cluster0.tyigyp7.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -21,12 +27,44 @@ const client = new MongoClient(uri, {
   },
 });
 
+//custom middleware
+const verifyToken = async (req, res, next) => {
+  const token = req.cookies?.token;
+  console.log("value of token", token);
+
+  if (!token) {
+    return res.status(401).send({ message: "Unauthorized" });
+  }
+
+  jwt.verify(token, process.env.SECRET_KEY_TOKEN, (err, decoded) => {
+    if (err) {
+      console.log(err);
+      return res.status(401).send({ message: "Unauthorized" });
+    }
+    // console.log("decoded data from custom middleware3",decoded);
+    req.decoded = decoded;
+    next();
+  });
+};
+
 async function run() {
   try {
-  //  jwt token
+    //  jwt token
+    app.post("/jwt", async (req, res) => {
+      const user = req.body;
+      console.log(user);
 
-
-
+      const token = jwt.sign(user, process.env.SECRET_KEY_TOKEN, {
+        expiresIn: "1d",
+      });
+      res
+        .cookie("token", token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+        })
+        .send({ success: true });
+    });
 
 
 
@@ -37,7 +75,7 @@ async function run() {
     const database = client.db("vibePalace");
     const rooms = database.collection("rooms");
     const bookings = database.collection("bookings");
-    const reviews = database.collection("reviews")
+    const reviews = database.collection("reviews");
 
     app.get("/rooms", async (req, res) => {
       const result = await rooms.find().toArray();
@@ -45,15 +83,15 @@ async function run() {
     });
 
     app.get("/roomsSort", async (req, res) => {
-      const sortOption ={price_per_night : 1}
-      const cursor = rooms.find().sort(sortOption)
+      const sortOption = { price_per_night: 1 };
+      const cursor = rooms.find().sort(sortOption);
       const result = await cursor.toArray();
       res.send(result);
     });
 
     app.get("/reviews", async (req, res) => {
       const sortOption = { time: -1 };
-      const cursor = reviews.find().sort(sortOption)
+      const cursor = reviews.find().sort(sortOption);
       const result = await cursor.toArray();
       res.send(result);
     });
@@ -95,7 +133,7 @@ async function run() {
 
     app.post("/reviews", async (req, res) => {
       const data = req.body;
-      console.log(data)
+      console.log(data);
       const review = {
         ...data,
       };
@@ -133,13 +171,12 @@ async function run() {
       res.send(result);
     });
 
-
-    app.delete("/deleteBookings/:id", async(req, res)=>{
+    app.delete("/deleteBookings/:id", async (req, res) => {
       const id = req.params.id;
-      const query = {_id: id}
-      const result = await bookings.deleteOne(query)
-      res.send(result)
-    })
+      const query = { _id: id };
+      const result = await bookings.deleteOne(query);
+      res.send(result);
+    });
 
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
