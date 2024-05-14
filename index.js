@@ -37,6 +37,21 @@ async function run() {
       const result = await cursor.toArray();
       res.send(result);
     });
+
+    app.get("/roomsSort", async (req, res) => {
+
+      const sortOption ={price_per_night : 1}
+      const cursor = rooms.find().sort(sortOption)
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+
+    app.get("/reviews", async (req, res) => {
+      const cursor = reviews.find().sort({time: -1})
+      const result = await cursor.toArray();
+      res.send(result);
+    });
     app.get("/room/:id", async (req, res) => {
       const id = req.params.id;
       console.log(id);
@@ -114,6 +129,15 @@ async function run() {
       const result = await bookings.updateOne(query, updateRoom, options);
       res.send(result);
     });
+
+
+    app.delete("/deleteBookings/:id", async(req, res)=>{
+      const id = req.params.id;
+      // console.log(id)
+      const query = {_id: id}
+      const result = await bookings.deleteOne(query)
+      res.send(result)
+    })
 
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
