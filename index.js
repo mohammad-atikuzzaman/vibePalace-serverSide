@@ -33,14 +33,11 @@ async function run() {
     const reviews = database.collection("reviews")
 
     app.get("/rooms", async (req, res) => {
-      // const cursor = rooms.find();
-      // const result = await cursor.toArray();
       const result = await rooms.find().toArray();
       res.send(result);
     });
 
     app.get("/roomsSort", async (req, res) => {
-
       const sortOption ={price_per_night : 1}
       const cursor = rooms.find().sort(sortOption)
       const result = await cursor.toArray();
@@ -49,7 +46,8 @@ async function run() {
 
 
     app.get("/reviews", async (req, res) => {
-      const cursor = reviews.find().sort({time: -1})
+      const sortOption = { time: -1 };
+      const cursor = reviews.find().sort(sortOption)
       const result = await cursor.toArray();
       res.send(result);
     });
