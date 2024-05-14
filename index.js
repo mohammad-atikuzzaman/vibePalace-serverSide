@@ -64,6 +64,12 @@ async function run() {
         .send({ success: true });
     });
 
+    app.post("/logout", async (req, res) => {
+      const user = req.body;
+      console.log("logging out :", user);
+      res.clearCookie("token", { maxAge: 0 }).send({ message: true });
+    });
+
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
     // await client.db("admin").command({ ping: 1 });
