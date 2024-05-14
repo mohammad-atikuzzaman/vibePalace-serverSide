@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+require("dotenv").config();
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const app = express();
 const port = process.env.PORT || 4000;
@@ -8,7 +9,9 @@ app.use(express.json());
 app.use(cors());
 
 const uri =
-  "mongodb+srv://vibePalace:akash123@cluster0.tyigyp7.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+  `mongodb+srv://${process.env.DB_User}:${process.env.DB_Pass}@cluster0.tyigyp7.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+// const uri =
+//   "mongodb+srv://vibePalace:akash123@cluster0.tyigyp7.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -27,6 +30,7 @@ async function run() {
     const database = client.db("vibePalace");
     const rooms = database.collection("rooms");
     const bookings = database.collection("bookings");
+    const reviews = database.collection("reviews")
 
     app.get("/rooms", async (req, res) => {
       const cursor = rooms.find();
@@ -37,42 +41,79 @@ async function run() {
       const id = req.params.id;
       console.log(id);
       const query = { _id: new ObjectId(id) };
-      const result = await rooms.findOne(query)
-      
+      const result = await rooms.findOne(query);
+
+      res.send(result);
+    });
+
+    app.get("/myRooms/:email", async (req, res) => {
+      const myEmail = req.params.email;
+
+      const query = { email: myEmail };
+      const result = await bookings.find(query).toArray();
+
+      res.send(result);
+    });
+
+    app.get("/reviews/:id", async (req, res) => {
+      const id = req.params.id;
+
+      const query = { roomId: id };
+      const result = await reviews.find(query).toArray();
+
       res.send(result);
     });
 
 
 
-    app.post("/bookings", async(req, res)=>{
-      const data = req.body
-      const bookingsData ={
-        ...data
-      }
-      const result= await bookings.insertOne(bookingsData)
-      res.send(result)
+    app.post("/bookings", async (req, res) => {
+      const data = req.body;
+      const bookingsData = {
+        ...data,
+      };
+      const result = await bookings.insertOne(bookingsData);
+      res.send(result);
+    });
 
-    })
+    app.post("/reviews", async (req, res) => {
+      const data = req.body;
+      console.log(data)
+      const review = {
+        ...data,
+      };
+      const result = await reviews.insertOne(review);
+      res.send(result);
+    });
 
+    app.patch("/bookRoom/:id", async (req, res) => {
+      const id = req.params.id;
+      const { availability } = req.body;
+      const query = { _id: new ObjectId(id) };
+      const options = {
+        upsert: true,
+      };
+      const updateRoom = {
+        $set: { availability },
+      };
+      const result = await rooms.updateOne(query, updateRoom, options);
+      res.send(result);
+    });
 
-
-    app.patch("/bookRoom/:id", async(req, res)=>{
-      const id = req.params.id
-      const {availability} = req.body
-      const query = {_id: new ObjectId(id)}
-      const options ={
-        upsert: true
-      }
-       
-      const  updateRoom ={
-        $set: {
-          availability
-        }
-      }
-      const result = await rooms.updateOne(query, updateRoom, options)
-      res.send(result)
-
-    })
+    app.patch("/updateDate/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log(id);
+      const { date } = req.body;
+      console.log(date);
+      const query = { _id: id };
+      const options = {
+        upsert: true,
+      };
+      const updateRoom = {
+        $set: { date },
+      };
+      const result = await bookings.updateOne(query, updateRoom, options);
+      res.send(result);
+    });
 
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
