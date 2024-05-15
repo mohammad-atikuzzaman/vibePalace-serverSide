@@ -1,3 +1,5 @@
+## Category: assignment_category_0004
+
 ## Vibe Palace
 Live links
 https://vibe-palace.web.app/
