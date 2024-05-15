@@ -13,8 +13,8 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://vibe-palace.web.app/",
-      "https://vibe-palace.firebaseapp.com/",
+      "https://vibe-palace.web.app",
+      "https://vibe-palace.firebaseapp.com",
     ],
     credentials: true,
   })
@@ -71,7 +71,9 @@ async function run() {
     app.post("/logout", async (req, res) => {
       const user = req.body;
       // console.log("logging out :", user);
-      res.clearCookie("token", { maxAge: 0, sameSite: "none", secure:true }).send({ message: true });
+      res
+        .clearCookie("token", { maxAge: 0, sameSite: "none", secure: true })
+        .send({ message: true });
     });
 
     // Connect the client to the server	(optional starting in v4.7)
