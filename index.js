@@ -11,7 +11,11 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(
   cors({
-    origin: ["http://localhost:5173"],
+    origin: [
+      "http://localhost:5173",
+      "https://vibe-palace.web.app/",
+      "https://vibe-palace.firebaseapp.com/",
+    ],
     credentials: true,
   })
 );
@@ -37,7 +41,7 @@ const verifyToken = async (req, res, next) => {
 
   jwt.verify(token, process.env.SECRET_KEY_TOKEN, (err, decoded) => {
     if (err) {
-      console.log(err);
+      // console.log(err);
       return res.status(401).send({ message: "Unauthorized" });
     }
     // console.log("decoded data from custom middleware",decoded);
@@ -66,8 +70,8 @@ async function run() {
 
     app.post("/logout", async (req, res) => {
       const user = req.body;
-      console.log("logging out :", user);
-      res.clearCookie("token", { maxAge: 0 }).send({ message: true });
+      // console.log("logging out :", user);
+      res.clearCookie("token", { maxAge: 0, sameSite: "none", secure:true }).send({ message: true });
     });
 
     // Connect the client to the server	(optional starting in v4.7)
